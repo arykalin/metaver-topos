@@ -1,0 +1,15 @@
+/credentials.json
+/token.json
+/scheet/token.json
+/scheet/credentials.json
+/sent.json
+/test_iwark/
+/client_secret.json
+/config.yml
+/mailer/mailer_test.go
+/notifyer.log
+/sent.log
+/user_data.json
+.idea
+/mailer/mails/member_with_team.html
+/mailer/mails/member_with_team.zip

@@ -1,0 +1,15 @@
+chat_logic_sheet: "cccccccccccccccccccccccccccccccccccccccccccc"
+#Форма Команда (Ответы)
+#https://docs.google.com/spreadsheets/d/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+answers_sheet_1: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+#second form Форма Участник без команды (Ответы)
+#https://docs.google.com/spreadsheets/d/yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+answers_sheet_2: "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+mail_user: "mailuser.notifyer@gmail.com"
+mail_password: "xxxxx"
+mail_host: "smtp.gmail.com"
+mail_port: "587"
+mail_debug_address: "mailuser@gmail.com"
+# if set add this address to CC and sen notification to it too
+mail_cc_address: "mailuser.notifyer@gmail.com"
+
