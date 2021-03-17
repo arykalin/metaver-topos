@@ -92,7 +92,13 @@ func main() {
 	if err != nil {
 		logger.Fatalf("failed to get sheet data: %s", err)
 	}
-	err = formUsers.AddUsers(sheet1, 1, 2, true, 0)
+	sheet1Config := users.SheetConfig{
+		TrackIdx:    1,
+		MailIdx:     2,
+		HaveTeam:    true,
+		UserTypeIdx: nil,
+	}
+	err = formUsers.AddUsers(sheet1, &sheet1Config)
 	if err != nil {
 		logger.Fatalf("failed to make users map: %s", err)
 	}
@@ -107,7 +113,15 @@ func main() {
 	if err != nil {
 		logger.Fatalf("failed to get sheet data: %s", err)
 	}
-	err = formUsers.AddUsers(sheet2, 1, 6, false, 8)
+
+	mentorIdx := 8
+	sheet2Config := users.SheetConfig{
+		TrackIdx:    1,
+		MailIdx:     6,
+		HaveTeam:    false,
+		UserTypeIdx: &mentorIdx,
+	}
+	err = formUsers.AddUsers(sheet2, &sheet2Config)
 	if err != nil {
 		logger.Fatalf("failed to make users map: %s", err)
 	}
