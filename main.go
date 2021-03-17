@@ -32,6 +32,7 @@ type Config struct {
 	MailPort         int    `yaml:"mail_port"`
 	MailDebugAddress string `yaml:"mail_debug_address"`
 	MailCCAddress    string `yaml:"mail_cc_address"`
+	SentFile         string `yaml:"sent_file"`
 }
 
 func main() {
@@ -108,7 +109,7 @@ func main() {
 		config.MailDebugAddress,
 		config.MailCCAddress,
 	)
-	n := notifier.NewNotifier(logger, newMailer)
+	n := notifier.NewNotifier(logger, newMailer, config.SentFile)
 	err = n.Notify(mapper.GetMap(), formUsers.GetUsers())
 	if err != nil {
 		logger.Fatalf("error notify: %s", err)

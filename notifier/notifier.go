@@ -2,6 +2,7 @@ package notifier
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 
@@ -12,15 +13,14 @@ import (
 	"github.com/arykalin/metaver-topos/users"
 )
 
-const sentJsonFile = "sent.json"
-
 type SentFile struct {
 	Sent map[string]bool `json:"mail_sent,omitempty"`
 }
 
 type notifier struct {
-	logger *zap.SugaredLogger
-	mailer mailer.Mailer
+	logger   *zap.SugaredLogger
+	mailer   mailer.Mailer
+	sentFile string
 }
 
 type Notifier interface {
@@ -30,7 +30,7 @@ type Notifier interface {
 func (n notifier) Notify(chatMap chatmapper.ChatMap, users users.Users) error {
 	sentData := SentFile{}
 	sentData.Sent = make(map[string]bool)
-	jsonData, err := os.Open(sentJsonFile)
+	jsonData, err := os.Open(n.sentFile)
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,8 @@ func (n notifier) Notify(chatMap chatmapper.ChatMap, users users.Users) error {
 	}
 
 	for mail, user := range users {
-		if sent, ok := sentData.Sent[mail]; ok && sent {
+		sentRecord := fmt.Sprintf("%s-%s", mail, user.Track)
+		if sent, ok := sentData.Sent[sentRecord]; ok && sent {
 			n.logger.Debugw("message already sent. skip", "mail", mail)
 			continue
 		}
@@ -53,9 +54,9 @@ func (n notifier) Notify(chatMap chatmapper.ChatMap, users users.Users) error {
 			n.logger.Debugf("sending links to user %s from track: %s. track info: %+v\n", mail, user.Track, trackInfo)
 			err = n.mailer.SendGreeting(user, trackInfo)
 			if err != nil {
-				return err
+				n.logger.Errorw("sending mail error", "err", err)
 			}
-			sentData.Sent[mail] = true
+			sentData.Sent[sentRecord] = true
 		} else {
 			n.logger.Debugf("user not found in track map mail: %s track: %s", mail, user.Track)
 		}
@@ -65,13 +66,14 @@ func (n notifier) Notify(chatMap chatmapper.ChatMap, users users.Users) error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(sentJsonFile, file, 0644) //nolint:gosec
+	err = ioutil.WriteFile(n.sentFile, file, 0644) //nolint:gosec
 	return err
 }
 
-func NewNotifier(logger *zap.SugaredLogger, mailer mailer.Mailer) Notifier {
+func NewNotifier(logger *zap.SugaredLogger, mailer mailer.Mailer, sentFile string) Notifier {
 	return &notifier{
-		logger: logger,
-		mailer: mailer,
+		logger:   logger,
+		mailer:   mailer,
+		sentFile: sentFile,
 	}
 }
