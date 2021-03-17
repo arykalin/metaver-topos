@@ -70,7 +70,11 @@ func (u *users) AddUsers(sheet *spreadsheet.Sheet, config *SheetConfig) (err err
 				user.Type = UserTypeVolunteer
 			case Participant:
 				user.Type = UserTypeParticipant
+			default:
+				user.Type = UserTypeUnknonwn
 			}
+		} else {
+			user.Type = UserTypeParticipant
 		}
 
 		var track string

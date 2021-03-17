@@ -18,6 +18,7 @@ type mailer struct {
 	User         string
 	Password     string
 	SMTPHost     string
+	SMTPPort     int
 	DebugAddress string
 	CCAddress    string
 }
@@ -38,7 +39,11 @@ func (m mailer) SendGreeting(user users.User, info chatmapper.Links) (err error)
 		return fmt.Errorf("track name is empty")
 	}
 
-	if user.IsMentor {
+	if user.Type == users.UserTypeUnknonwn {
+		return fmt.Errorf("user type unknown")
+	}
+
+	if user.Type == users.UserTypeMentor {
 		body, err = m.ParseTemplate("mailer/mails/template_mentor_without_team.html", info)
 		if err != nil {
 			return err
@@ -46,7 +51,7 @@ func (m mailer) SendGreeting(user users.User, info chatmapper.Links) (err error)
 		m.logger.Debugw("user template", "user", user.Email, "body", body)
 	}
 
-	if !user.IsMentor {
+	if user.Type == users.UserTypeParticipant {
 		if user.HaveTeam {
 			body, err = m.ParseTemplate("mailer/mails/template_with_team.html", info)
 			if err != nil {
@@ -103,6 +108,7 @@ func NewMailer(
 	user string,
 	password string,
 	host string,
+	port int,
 	debugAddress string,
 	ccAddress string,
 ) Mailer {
@@ -111,6 +117,7 @@ func NewMailer(
 		User:         user,
 		Password:     password,
 		SMTPHost:     host,
+		SMTPPort:     port,
 		DebugAddress: debugAddress,
 		CCAddress:    ccAddress,
 	}

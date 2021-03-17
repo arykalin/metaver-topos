@@ -22,12 +22,14 @@ import (
 
 type Config struct {
 	ChatMapSheetID   string `yaml:"chat_logic_sheet"`
-	AnswersSheet1ID  string `yaml:"answers_sheet_1"`
-	AnswersSheet2ID  string `yaml:"answers_sheet_2"`
+	AnswersSheet1ID  string `yaml:"sheet_answers_1"`
+	AnswersSheet2ID  string `yaml:"sheet_answers_2"`
+	SkipSheet1       int    `yaml:"sheet_skip_1"`
+	SkipSheet2       int    `yaml:"sheet_skip_2"`
 	MailUser         string `yaml:"mail_user"`
 	MailPassword     string `yaml:"mail_password"`
 	MailHost         string `yaml:"mail_host"`
-	MailPort         string `yaml:"mail_port"`
+	MailPort         int    `yaml:"mail_port"`
 	MailDebugAddress string `yaml:"mail_debug_address"`
 	MailCCAddress    string `yaml:"mail_cc_address"`
 }
@@ -84,6 +86,36 @@ func main() {
 	formUsers := users.NewUsers()
 
 	// Add users from first form
+	err = addUsersForm1(s, config, logger, formUsers)
+
+	// Add users from second form
+	err = addUsersForm2(s, config, logger, formUsers)
+	if err != nil {
+		logger.Fatalf("failed to add users from second form")
+	}
+
+	err = formUsers.DumpUsers()
+	if err != nil {
+		logger.Fatalf("failed to dump users map: %s", err)
+	}
+
+	newMailer := mailer.NewMailer(
+		logger,
+		config.MailUser,
+		config.MailPassword,
+		config.MailHost,
+		config.MailPort,
+		config.MailDebugAddress,
+		config.MailCCAddress,
+	)
+	n := notifier.NewNotifier(logger, newMailer)
+	err = n.Notify(mapper.GetMap(), formUsers.GetUsers())
+	if err != nil {
+		logger.Fatalf("error notify: %s", err)
+	}
+}
+
+func addUsersForm1(s sheet.Sheet, config Config, logger *zap.SugaredLogger, formUsers users.UsersInt) error {
 	spreadsheet1, err := s.GetSheet(config.AnswersSheet1ID)
 	if err != nil {
 		logger.Fatalf("failed to get sheet data: %s", err)
@@ -97,14 +129,16 @@ func main() {
 		MailIdx:     2,
 		HaveTeam:    true,
 		UserTypeIdx: nil,
+		Skip:        config.SkipSheet1,
 	}
 	err = formUsers.AddUsers(sheet1, &sheet1Config)
 	if err != nil {
 		logger.Fatalf("failed to make users map: %s", err)
 	}
-	logger.Debugw("users after first form", "total", len(formUsers.GetUsers()))
+	return err
+}
 
-	// Add users from second form
+func addUsersForm2(s sheet.Sheet, config Config, logger *zap.SugaredLogger, formUsers users.UsersInt) error {
 	spreadsheet2, err := s.GetSheet(config.AnswersSheet2ID)
 	if err != nil {
 		logger.Fatalf("failed to get sheet data: %s", err)
@@ -120,28 +154,11 @@ func main() {
 		MailIdx:     6,
 		HaveTeam:    false,
 		UserTypeIdx: &mentorIdx,
+		Skip:        config.SkipSheet2,
 	}
 	err = formUsers.AddUsers(sheet2, &sheet2Config)
 	if err != nil {
 		logger.Fatalf("failed to make users map: %s", err)
 	}
-	logger.Debugw("users after second form", "total", len(formUsers.GetUsers()))
-	err = formUsers.DumpUsers()
-	if err != nil {
-		logger.Fatalf("failed to dump users map: %s", err)
-	}
-
-	newMailer := mailer.NewMailer(
-		logger,
-		config.MailUser,
-		config.MailPassword,
-		config.MailHost,
-		config.MailDebugAddress,
-		config.MailCCAddress,
-	)
-	n := notifier.NewNotifier(logger, newMailer)
-	err = n.Notify(mapper.GetMap(), formUsers.GetUsers())
-	if err != nil {
-		logger.Fatalf("error notify: %s", err)
-	}
+	return err
 }

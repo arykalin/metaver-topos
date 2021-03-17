@@ -1,10 +1,10 @@
 chat_logic_sheet: "cccccccccccccccccccccccccccccccccccccccccccc"
 #Форма Команда (Ответы)
 #https://docs.google.com/spreadsheets/d/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-answers_sheet_1: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+sheet_answers_1: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 #second form Форма Участник без команды (Ответы)
 #https://docs.google.com/spreadsheets/d/yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
-answers_sheet_2: "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+sheet_answers_2: "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
 mail_user: "mailuser.notifyer@gmail.com"
 mail_password: "xxxxx"
 mail_host: "smtp.gmail.com"
