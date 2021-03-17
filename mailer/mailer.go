@@ -53,14 +53,14 @@ func (m mailer) SendGreeting(user users.User, info chatmapper.Links) (err error)
 
 	if user.Type == users.UserTypeParticipant {
 		if user.HaveTeam {
-			body, err = m.ParseTemplate("mailer/mails/template_with_team.html", info)
+			body, err = m.ParseTemplate("mailer/mails/template_participant_with_team.html", info)
 			if err != nil {
 				return err
 			}
 			m.logger.Debugw("user template", "user", user.Email, "body", body)
 		}
 		if !user.HaveTeam {
-			body, err = m.ParseTemplate("mailer/mails/template_without_team.html", info)
+			body, err = m.ParseTemplate("mailer/mails/template_participant_without_team.html", info)
 			if err != nil {
 				return err
 			}

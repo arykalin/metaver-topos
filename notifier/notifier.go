@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
+	"time"
 
 	"go.uber.org/zap"
 
@@ -30,16 +30,17 @@ type Notifier interface {
 func (n notifier) Notify(chatMap chatmapper.ChatMap, users users.Users) error {
 	sentData := SentFile{}
 	sentData.Sent = make(map[string]bool)
-	jsonData, err := os.Open(n.sentFile)
+	byteValue, err := ioutil.ReadFile(n.sentFile)
 	if err != nil {
 		return err
 	}
-	byteValue, _ := ioutil.ReadAll(jsonData)
+	//make backup
+	backupFile := fmt.Sprintf("%s-%d", n.sentFile, time.Now().Unix())
+	err = ioutil.WriteFile(backupFile, byteValue, 0644)
+	if err != nil {
+		return err
+	}
 	err = json.Unmarshal(byteValue, &sentData)
-	if err != nil {
-		return err
-	}
-	err = jsonData.Close()
 	if err != nil {
 		return err
 	}
