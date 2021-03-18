@@ -61,7 +61,7 @@ func (m mailer) SendGreeting(user users.User, info chatmapper.Links) (err error)
 		m.logger.Debugw("user template", "user", user.Email, "template", tmpltMentorWithoutTeam)
 	case users.UserTypeParticipant:
 		if user.HaveTeam {
-			subj = fmt.Sprintf("Регистрация команды в Краефест - %s", user.Track)
+			subj = fmt.Sprintf("Регистрация команды в Краефест - трек \"%s\"", user.Track)
 			body, err = m.ParseTemplate(tmpltParticipantWithTeam, info)
 			if err != nil {
 				return err
@@ -69,7 +69,7 @@ func (m mailer) SendGreeting(user users.User, info chatmapper.Links) (err error)
 			m.logger.Debugw("user template", "user", user.Email, "template", tmpltParticipantWithTeam)
 		}
 		if !user.HaveTeam {
-			subj = fmt.Sprintf("Регистрация участника в Краефест - %s", user.Track)
+			subj = fmt.Sprintf("Регистрация участника в Краефест - трек \"%s\"", user.Track)
 			body, err = m.ParseTemplate(tmpltParticipantWithoutTeam, info)
 			if err != nil {
 				return err
@@ -78,14 +78,13 @@ func (m mailer) SendGreeting(user users.User, info chatmapper.Links) (err error)
 		}
 	case users.UserTypeVolunteer:
 		if !user.HaveTeam {
-			subj = fmt.Sprintf("Регистрация волонтера в Краефест - %s", user.Track)
+			subj = fmt.Sprintf("Регистрация волонтера в Краефест - трек \"%s\"", user.Track)
 			body, err = m.ParseTemplate(tmpltVolunteerWithoutTeam, info)
 			if err != nil {
 				return err
 			}
 			m.logger.Debugw("user template", "user", user.Email, "template", tmpltVolunteerWithoutTeam)
 		}
-
 	default:
 		return fmt.Errorf("can not determine user type for template")
 	}
