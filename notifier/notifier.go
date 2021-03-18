@@ -55,7 +55,8 @@ func (n notifier) Notify(chatMap chatmapper.ChatMap, users users.Users) error {
 			n.logger.Debugf("sending links to user %s from track: %s. track info: %+v\n", mail, user.Track, trackInfo)
 			err = n.mailer.SendGreeting(user, trackInfo)
 			if err != nil {
-				n.logger.Errorw("sending mail error", "err", err)
+				n.logger.Errorw("sending mail error", "mail", mail, "track", user.Track, "type", user.Type.Name(), "err", err)
+				continue
 			}
 			sentData.Sent[sentRecord] = true
 		} else {

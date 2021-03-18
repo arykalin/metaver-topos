@@ -13,6 +13,7 @@ const (
 	TrackLeader      = "Ведущий трека"
 	Participant      = "Участник"
 	Volunteer        = "Волонтер"
+	Unknown          = "Unknonwn"
 )
 
 const (
@@ -24,6 +25,22 @@ const (
 )
 
 type UserType int
+
+func (u UserType) Name() string {
+	switch u {
+	case UserTypeUnknonwn:
+		return Unknown
+	case UserTypeMentor:
+		return Mentor
+	case UserTypeVolunteer:
+		return Volunteer
+	case UserTypeParticipant:
+		return Participant
+	case UserTypeTrackLeader:
+		return TrackLeader
+	}
+	return Unknown
+}
 
 type User struct {
 	Email    string

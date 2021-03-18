@@ -28,7 +28,10 @@ type Mailer interface {
 }
 
 func (m mailer) SendGreeting(user users.User, info chatmapper.Links) (err error) {
-	var body string
+	var (
+		body string
+		subj string
+	)
 
 	//if debug address is set send mail to it
 	if m.DebugAddress != "" {
@@ -39,40 +42,45 @@ func (m mailer) SendGreeting(user users.User, info chatmapper.Links) (err error)
 		return fmt.Errorf("track name is empty")
 	}
 
-	if user.Type == users.UserTypeUnknonwn {
+	switch user.Type {
+	case users.UserTypeUnknonwn:
 		return fmt.Errorf("user type unknown")
-	}
-
-	if user.Type == users.UserTypeMentor {
+	case users.UserTypeMentor:
 		body, err = m.ParseTemplate("mailer/mails/template_mentor_without_team.html", info)
 		if err != nil {
 			return err
 		}
+		subj = fmt.Sprintf("Регистрация участника в КраеФест - трек \"%s\"", user.Track)
 		m.logger.Debugw("user template", "user", user.Email, "body", body)
-	}
-
-	if user.Type == users.UserTypeParticipant {
+	case users.UserTypeParticipant:
 		if user.HaveTeam {
 			body, err = m.ParseTemplate("mailer/mails/template_participant_with_team.html", info)
 			if err != nil {
 				return err
 			}
+			subj = fmt.Sprintf("Регистрация команды в Краефест - %s", user.Track)
 			m.logger.Debugw("user template", "user", user.Email, "body", body)
 		}
 		if !user.HaveTeam {
+			subj = fmt.Sprintf("Регистрация в Краефест - %s", user.Track)
 			body, err = m.ParseTemplate("mailer/mails/template_participant_without_team.html", info)
 			if err != nil {
 				return err
 			}
 			m.logger.Debugw("user template", "user", user.Email, "body", body)
 		}
+	default:
+		return fmt.Errorf("can not determine user type for template")
 	}
 
 	if body == "" {
 		return fmt.Errorf("body is empty")
 	}
 
-	subj := fmt.Sprintf("Регистрация участника в КраеФест - трек \"%s\"", user.Track)
+	if subj == "" {
+		return fmt.Errorf("subject is empty")
+	}
+
 	gm := gomail.NewMessage()
 	gm.SetHeader("From", m.User)
 	gm.SetHeader("To", user.Email)
