@@ -57,19 +57,19 @@ func (m mailer) SendGreeting(user users.User, info chatmapper.Links) (err error)
 		if err != nil {
 			return err
 		}
-		subj = fmt.Sprintf("Регистрация участника в КраеФест - трек \"%s\"", user.Track)
+		subj = fmt.Sprintf("Регистрация наставника в Краефест  - трек \"%s\"", user.Track)
 		m.logger.Debugw("user template", "user", user.Email, "template", tmpltMentorWithoutTeam)
 	case users.UserTypeParticipant:
 		if user.HaveTeam {
+			subj = fmt.Sprintf("Регистрация команды в Краефест - %s", user.Track)
 			body, err = m.ParseTemplate(tmpltParticipantWithTeam, info)
 			if err != nil {
 				return err
 			}
-			subj = fmt.Sprintf("Регистрация команды в Краефест - %s", user.Track)
 			m.logger.Debugw("user template", "user", user.Email, "template", tmpltParticipantWithTeam)
 		}
 		if !user.HaveTeam {
-			subj = fmt.Sprintf("Регистрация в Краефест - %s", user.Track)
+			subj = fmt.Sprintf("Регистрация участника в Краефест - %s", user.Track)
 			body, err = m.ParseTemplate(tmpltParticipantWithoutTeam, info)
 			if err != nil {
 				return err
