@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -81,7 +80,7 @@ func main() {
 	}
 	mapper := chatmapper.NewChatMapper(chatMapSheet)
 	j, _ := json.MarshalIndent(mapper.GetMap(), "", "    ")
-	fmt.Printf("got chat map:\n%s\n", j)
+	err = ioutil.WriteFile("chats_map.json", j, 0644)
 
 	// get answers
 	formUsers := users.NewUsers()
