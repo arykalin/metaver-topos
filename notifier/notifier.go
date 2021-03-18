@@ -10,6 +10,7 @@ import (
 
 	chatmapper "github.com/arykalin/metaver-topos/chat_mapper"
 	"github.com/arykalin/metaver-topos/mailer"
+	"github.com/arykalin/metaver-topos/telegram"
 	"github.com/arykalin/metaver-topos/users"
 )
 
@@ -21,6 +22,7 @@ type notifier struct {
 	logger   *zap.SugaredLogger
 	mailer   mailer.Mailer
 	sentFile string
+	teleLog  telegram.TeleLog
 }
 
 type Notifier interface {
@@ -55,8 +57,18 @@ func (n notifier) Notify(chatMap chatmapper.ChatMap, users users.Users) error {
 			n.logger.Debugf("sending links to user %s from track: %s. track info: %+v\n", mail, user.Track, trackInfo)
 			err = n.mailer.SendGreeting(user, trackInfo)
 			if err != nil {
-				n.logger.Errorw("sending mail error", "mail", mail, "track", user.Track, "type", user.Type.Name(), "err", err)
+				msg := fmt.Sprintf("sending mail error mail: %s track: %s type: %s err: %s\n", mail, user.Track, user.Type.Name(), err)
+				n.logger.Error(msg)
+				terr := n.teleLog.SendMessage(msg)
+				if terr != nil {
+					n.logger.Errorw("sending telegram message error", "err", err)
+				}
 				continue
+			}
+			msg := fmt.Sprintf("sent mail to user mail: %s track: %s type: %s err: %s\n", mail, user.Track, user.Type.Name(), err)
+			terr := n.teleLog.SendMessage(msg)
+			if terr != nil {
+				n.logger.Errorw("sending telegram message error", "err", err)
 			}
 			sentData.Sent[sentRecord] = true
 		} else {
@@ -72,9 +84,15 @@ func (n notifier) Notify(chatMap chatmapper.ChatMap, users users.Users) error {
 	return err
 }
 
-func NewNotifier(logger *zap.SugaredLogger, mailer mailer.Mailer, sentFile string) Notifier {
+func NewNotifier(
+	logger *zap.SugaredLogger,
+	mailer mailer.Mailer,
+	sentFile string,
+	teleLog telegram.TeleLog,
+) Notifier {
 	return &notifier{
 		logger:   logger,
+		teleLog:  teleLog,
 		mailer:   mailer,
 		sentFile: sentFile,
 	}

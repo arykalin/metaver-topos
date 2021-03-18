@@ -16,6 +16,7 @@ import (
 	"github.com/arykalin/metaver-topos/mailer"
 	"github.com/arykalin/metaver-topos/notifier"
 	sheet "github.com/arykalin/metaver-topos/scheet"
+	"github.com/arykalin/metaver-topos/telegram"
 	"github.com/arykalin/metaver-topos/users"
 )
 
@@ -33,7 +34,7 @@ type Config struct {
 	MailCCAddress    string `yaml:"mail_cc_address"`
 	SentFile         string `yaml:"sent_file"`
 	TeleToken        string `yaml:"telegram_token"`
-	TeleChatID       string `yaml:"telegram_chat_id"`
+	TeleChatID       int64  `yaml:"telegram_chat_id"`
 }
 
 func main() {
@@ -110,7 +111,17 @@ func main() {
 		config.MailDebugAddress,
 		config.MailCCAddress,
 	)
-	n := notifier.NewNotifier(logger, newMailer, config.SentFile)
+	newTeleLog := telegram.NewTelegramLog(
+		config.TeleChatID,
+		config.TeleToken,
+	)
+	n := notifier.NewNotifier(
+		logger,
+		newMailer,
+		config.SentFile,
+		newTeleLog,
+	)
+
 	err = n.Notify(mapper.GetMap(), formUsers.GetUsers())
 	if err != nil {
 		logger.Fatalf("error notify: %s", err)
