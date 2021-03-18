@@ -32,6 +32,8 @@ type Config struct {
 	MailDebugAddress string `yaml:"mail_debug_address"`
 	MailCCAddress    string `yaml:"mail_cc_address"`
 	SentFile         string `yaml:"sent_file"`
+	TeleToken        string `yaml:"telegram_token"`
+	TeleChatID       string `yaml:"telegram_chat_id"`
 }
 
 func main() {
