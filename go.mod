@@ -3,7 +3,9 @@ module github.com/arykalin/metaver-topos
 go 1.16
 
 require (
+	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/spf13/pflag v1.0.5
+	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	go.uber.org/zap v1.16.0
 	golang.org/x/net v0.0.0-20210226172049-e18ecbb05110
 	golang.org/x/oauth2 v0.0.0-20210311163135-5366d9dc1934
