@@ -27,6 +27,13 @@ type Mailer interface {
 	SendGreeting(user users.User, info chatmapper.Links) error
 }
 
+const (
+	tmpltMentorWithoutTeam      = "mailer/mails/template_mentor_without_team.html"
+	tmpltParticipantWithTeam    = "mailer/mails/template_participant_with_team.html"
+	tmpltParticipantWithoutTeam = "mailer/mails/template_participant_without_team.html"
+	tmpltVolunteerWithoutTeam   = "mailer/mails/template_volunteer_without_team.html"
+)
+
 func (m mailer) SendGreeting(user users.User, info chatmapper.Links) (err error) {
 	var (
 		body string
@@ -46,30 +53,38 @@ func (m mailer) SendGreeting(user users.User, info chatmapper.Links) (err error)
 	case users.UserTypeUnknonwn:
 		return fmt.Errorf("user type unknown")
 	case users.UserTypeMentor:
-		body, err = m.ParseTemplate("mailer/mails/template_mentor_without_team.html", info)
+		body, err = m.ParseTemplate(tmpltMentorWithoutTeam, info)
 		if err != nil {
 			return err
 		}
 		subj = fmt.Sprintf("Регистрация участника в КраеФест - трек \"%s\"", user.Track)
-		m.logger.Debugw("user template", "user", user.Email, "body", body)
+		m.logger.Debugw("user template", "user", user.Email, "template", tmpltMentorWithoutTeam)
 	case users.UserTypeParticipant:
 		if user.HaveTeam {
-			body, err = m.ParseTemplate("mailer/mails/template_participant_with_team.html", info)
+			body, err = m.ParseTemplate(tmpltParticipantWithTeam, info)
 			if err != nil {
 				return err
 			}
 			subj = fmt.Sprintf("Регистрация команды в Краефест - %s", user.Track)
-			m.logger.Debugw("user template", "user", user.Email, "body", body)
+			m.logger.Debugw("user template", "user", user.Email, "template", tmpltParticipantWithTeam)
 		}
 		if !user.HaveTeam {
 			subj = fmt.Sprintf("Регистрация в Краефест - %s", user.Track)
-			body, err = m.ParseTemplate("mailer/mails/template_participant_without_team.html", info)
+			body, err = m.ParseTemplate(tmpltParticipantWithoutTeam, info)
 			if err != nil {
 				return err
 			}
-			m.logger.Debugw("user template", "user", user.Email, "body", body)
+			m.logger.Debugw("user template", "user", user.Email, "template", tmpltParticipantWithoutTeam)
 		}
 	case users.UserTypeVolunteer:
+		if !user.HaveTeam {
+			subj = fmt.Sprintf("Регистрация волонтера в Краефест - %s", user.Track)
+			body, err = m.ParseTemplate(tmpltVolunteerWithoutTeam, info)
+			if err != nil {
+				return err
+			}
+			m.logger.Debugw("user template", "user", user.Email, "template", tmpltVolunteerWithoutTeam)
+		}
 
 	default:
 		return fmt.Errorf("can not determine user type for template")
