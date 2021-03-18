@@ -149,12 +149,12 @@ func addUsersForm2(s sheet.Sheet, config Config, logger *zap.SugaredLogger, form
 		logger.Fatalf("failed to get sheet data: %s", err)
 	}
 
-	mentorIdx := 8
+	userTypeIdx := 8
 	sheet2Config := users.SheetConfig{
 		TrackIdx:    1,
 		MailIdx:     6,
 		HaveTeam:    false,
-		UserTypeIdx: &mentorIdx,
+		UserTypeIdx: &userTypeIdx,
 		Skip:        config.SkipSheet2,
 	}
 	err = formUsers.AddUsers(sheet2, &sheet2Config)

@@ -69,6 +69,8 @@ func (m mailer) SendGreeting(user users.User, info chatmapper.Links) (err error)
 			}
 			m.logger.Debugw("user template", "user", user.Email, "body", body)
 		}
+	case users.UserTypeVolunteer:
+
 	default:
 		return fmt.Errorf("can not determine user type for template")
 	}
