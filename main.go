@@ -138,13 +138,14 @@ func addUsersForm1(s sheet.Sheet, config Config, logger *zap.SugaredLogger, form
 		logger.Fatalf("failed to get sheet data: %s", err)
 	}
 	sheet1Config := users.SheetConfig{
-		TrackIdx:    1,
-		MailIdx:     2,
-		HaveTeam:    true,
-		UserTypeIdx: nil,
-		Skip:        config.SkipSheet1,
+		TrackIdx:      1,
+		MailIdx:       2,
+		LeaderMailIdx: 3,
+		HaveTeam:      true,
+		UserTypeIdx:   nil,
+		Skip:          config.SkipSheet1,
 	}
-	err = formUsers.AddUsers(sheet1, &sheet1Config)
+	err = formUsers.AddUsers(sheet1, &sheet1Config, users.FormTypeWithTeam)
 	if err != nil {
 		logger.Fatalf("failed to make users map: %s", err)
 	}
@@ -169,7 +170,7 @@ func addUsersForm2(s sheet.Sheet, config Config, logger *zap.SugaredLogger, form
 		UserTypeIdx: &userTypeIdx,
 		Skip:        config.SkipSheet2,
 	}
-	err = formUsers.AddUsers(sheet2, &sheet2Config)
+	err = formUsers.AddUsers(sheet2, &sheet2Config, users.FormTypeNoTeam)
 	if err != nil {
 		logger.Fatalf("failed to make users map: %s", err)
 	}

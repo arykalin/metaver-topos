@@ -23,12 +23,17 @@ type mailer struct {
 	CCAddress    string
 }
 
+const (
+	track = "Среда как зона поиска, влияния и поддержки (трек для педагогов)"
+)
+
 type Mailer interface {
 	SendGreeting(user users.User, info chatmapper.Links) error
 }
 
 const (
 	tmpltMentorWithoutTeam      = "mailer/mails/template_mentor_without_team.html"
+	tmpltMentorWithTeam         = "mailer/mails/template_mentor_with_team.html"
 	tmpltParticipantWithTeam    = "mailer/mails/template_participant_with_team.html"
 	tmpltParticipantWithoutTeam = "mailer/mails/template_participant_without_team.html"
 	tmpltVolunteerWithoutTeam   = "mailer/mails/template_volunteer_without_team.html"
@@ -52,13 +57,32 @@ func (m mailer) SendGreeting(user users.User, info chatmapper.Links) (err error)
 	switch user.Type {
 	case users.UserTypeUnknonwn:
 		return fmt.Errorf("user type unknown")
-	case users.UserTypeMentor:
-		body, err = m.ParseTemplate(tmpltMentorWithoutTeam, info)
-		if err != nil {
-			return err
+	case users.UserTypeTrackLeader:
+		if user.HaveTeam {
+			subj = fmt.Sprintf("Регистрация команды в Краефест - трек \"%s\"", user.Track)
+			body, err = m.ParseTemplate(tmpltParticipantWithTeam, info)
+			if err != nil {
+				return err
+			}
+			m.logger.Debugw("user template", "user", user.Email, "template", tmpltParticipantWithTeam)
 		}
-		subj = fmt.Sprintf("Регистрация наставника в Краефест  - трек \"%s\"", user.Track)
-		m.logger.Debugw("user template", "user", user.Email, "template", tmpltMentorWithoutTeam)
+	case users.UserTypeMentor:
+		if user.HaveTeam {
+			body, err = m.ParseTemplate(tmpltMentorWithTeam, info)
+			if err != nil {
+				return err
+			}
+			subj = fmt.Sprintf("Регистрация наставника с командой в Краефест  - трек \"%s\"", user.Track)
+			m.logger.Debugw("user template", "user", user.Email, "template", tmpltMentorWithoutTeam)
+		}
+		if !user.HaveTeam {
+			body, err = m.ParseTemplate(tmpltMentorWithoutTeam, info)
+			if err != nil {
+				return err
+			}
+			subj = fmt.Sprintf("Регистрация наставника в Краефест  - трек \"%s\"", user.Track)
+			m.logger.Debugw("user template", "user", user.Email, "template", tmpltMentorWithoutTeam)
+		}
 	case users.UserTypeParticipant:
 		if user.HaveTeam {
 			subj = fmt.Sprintf("Регистрация команды в Краефест - трек \"%s\"", user.Track)

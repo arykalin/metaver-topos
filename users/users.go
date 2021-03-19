@@ -2,6 +2,7 @@ package users
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 
 	"gopkg.in/Iwark/spreadsheet.v2"
@@ -42,22 +43,32 @@ func (u UserType) Name() string {
 	return Unknown
 }
 
+type FormType int
+
+const (
+	FormTypeNone FormType = iota
+	FormTypeWithTeam
+	FormTypeNoTeam
+)
+
 type User struct {
-	Email    string
-	Track    string
-	Name     string
-	HaveTeam bool
-	Type     UserType
+	Email       string
+	LeaderEmail string
+	Track       string
+	Name        string
+	HaveTeam    bool
+	Type        UserType
 }
 
 type Users = map[string]User
 
 type SheetConfig struct {
-	TrackIdx    int
-	MailIdx     int
-	HaveTeam    bool
-	UserTypeIdx *int
-	Skip        int
+	TrackIdx      int
+	MailIdx       int
+	LeaderMailIdx int
+	HaveTeam      bool
+	UserTypeIdx   *int
+	Skip          int
 }
 
 type users struct {
@@ -65,19 +76,20 @@ type users struct {
 }
 
 type UsersInt interface {
-	AddUsers(sheet *spreadsheet.Sheet, config *SheetConfig) (err error)
+	AddUsers(sheet *spreadsheet.Sheet, config *SheetConfig, formType FormType) (err error)
 	GetUsers() Users
 	DumpUsers() error
 }
 
-func (u *users) AddUsers(sheet *spreadsheet.Sheet, config *SheetConfig) (err error) {
+func (u *users) AddUsers(sheet *spreadsheet.Sheet, config *SheetConfig, formType FormType) (err error) {
 	for i := range sheet.Rows {
 		if i < config.Skip {
 			// skip
 			continue
 		}
 		user := User{}
-		if config.UserTypeIdx != nil {
+		switch formType {
+		case FormTypeNoTeam:
 			switch sheet.Rows[i][*config.UserTypeIdx].Value {
 			case Mentor:
 				user.Type = UserTypeMentor
@@ -90,8 +102,10 @@ func (u *users) AddUsers(sheet *spreadsheet.Sheet, config *SheetConfig) (err err
 			default:
 				user.Type = UserTypeUnknonwn
 			}
-		} else {
-			user.Type = UserTypeParticipant
+		case FormTypeWithTeam:
+			user.Type = UserTypeMentor
+		default:
+			return fmt.Errorf("form type unknonwn")
 		}
 
 		var track string
@@ -103,6 +117,21 @@ func (u *users) AddUsers(sheet *spreadsheet.Sheet, config *SheetConfig) (err err
 		if len(sheet.Rows[i]) > config.MailIdx {
 			mail = sheet.Rows[i][config.MailIdx].Value
 		}
+
+		if formType == FormTypeWithTeam {
+			var leaderMail string
+			if len(sheet.Rows[i]) > config.LeaderMailIdx {
+				leaderMail = sheet.Rows[i][config.LeaderMailIdx].Value
+			}
+
+			if leaderMail != "" {
+				user.Email = leaderMail
+				user.HaveTeam = config.HaveTeam
+				user.Type = UserTypeTrackLeader
+				u.users[leaderMail] = user
+			}
+		}
+
 		user.Email = mail
 		user.HaveTeam = config.HaveTeam
 		u.users[mail] = user
