@@ -40,77 +40,13 @@ const (
 )
 
 func (m mailer) SendGreeting(user users.User, info chatmapper.Links) (err error) {
-	var (
-		body string
-		subj string
-	)
-
-	//if debug address is set send mail to it
-	if m.DebugAddress != "" {
-		user.Email = m.DebugAddress
-	}
-
 	if info.TrackName == "" {
 		return fmt.Errorf("track name is empty")
 	}
 
-	switch user.Type {
-	case users.UserTypeUnknonwn:
-		return fmt.Errorf("user type unknown")
-	case users.UserTypeTrackLeader:
-		if user.HaveTeam {
-			subj = fmt.Sprintf("Регистрация команды в Краефест - трек \"%s\"", user.Track)
-			body, err = m.ParseTemplate(tmpltParticipantWithTeam, info)
-			if err != nil {
-				return err
-			}
-			m.logger.Debugw("user template", "user", user.Email, "template", tmpltParticipantWithTeam)
-		}
-	case users.UserTypeMentor:
-		if user.HaveTeam {
-			body, err = m.ParseTemplate(tmpltMentorWithTeam, info)
-			if err != nil {
-				return err
-			}
-			subj = fmt.Sprintf("Регистрация наставника с командой в Краефест  - трек \"%s\"", user.Track)
-			m.logger.Debugw("user template", "user", user.Email, "template", tmpltMentorWithoutTeam)
-		}
-		if !user.HaveTeam {
-			body, err = m.ParseTemplate(tmpltMentorWithoutTeam, info)
-			if err != nil {
-				return err
-			}
-			subj = fmt.Sprintf("Регистрация наставника в Краефест  - трек \"%s\"", user.Track)
-			m.logger.Debugw("user template", "user", user.Email, "template", tmpltMentorWithoutTeam)
-		}
-	case users.UserTypeParticipant:
-		if user.HaveTeam {
-			subj = fmt.Sprintf("Регистрация команды в Краефест - трек \"%s\"", user.Track)
-			body, err = m.ParseTemplate(tmpltParticipantWithTeam, info)
-			if err != nil {
-				return err
-			}
-			m.logger.Debugw("user template", "user", user.Email, "template", tmpltParticipantWithTeam)
-		}
-		if !user.HaveTeam {
-			subj = fmt.Sprintf("Регистрация участника в Краефест - трек \"%s\"", user.Track)
-			body, err = m.ParseTemplate(tmpltParticipantWithoutTeam, info)
-			if err != nil {
-				return err
-			}
-			m.logger.Debugw("user template", "user", user.Email, "template", tmpltParticipantWithoutTeam)
-		}
-	case users.UserTypeVolunteer:
-		if !user.HaveTeam {
-			subj = fmt.Sprintf("Регистрация волонтера в Краефест - трек \"%s\"", user.Track)
-			body, err = m.ParseTemplate(tmpltVolunteerWithoutTeam, info)
-			if err != nil {
-				return err
-			}
-			m.logger.Debugw("user template", "user", user.Email, "template", tmpltVolunteerWithoutTeam)
-		}
-	default:
-		return fmt.Errorf("can not determine user type for template")
+	body, subj, err := m.makeBodyAndSubj(user, info)
+	if err != nil {
+		return err
 	}
 
 	if body == "" {
@@ -121,9 +57,25 @@ func (m mailer) SendGreeting(user users.User, info chatmapper.Links) (err error)
 		return fmt.Errorf("subject is empty")
 	}
 
+	err = m.sendMail(user, subj, body)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m mailer) sendMail(user users.User, subj string, body string) (err error) {
+	//if debug address is set send mail to it
+	var toEmail string
+	if m.DebugAddress != "" {
+		toEmail = m.DebugAddress
+	} else {
+		toEmail = user.Email
+	}
+
 	gm := gomail.NewMessage()
 	gm.SetHeader("From", m.User)
-	gm.SetHeader("To", user.Email)
+	gm.SetHeader("To", toEmail)
 	if m.CCAddress != "" {
 		gm.SetHeader("Cc", m.CCAddress)
 	}
@@ -136,7 +88,69 @@ func (m mailer) SendGreeting(user users.User, info chatmapper.Links) (err error)
 	if err = d.DialAndSend(gm); err != nil {
 		return err
 	}
-	return nil
+	return err
+}
+
+func (m mailer) makeBodyAndSubj(user users.User, info chatmapper.Links) (body string, subj string, err error) {
+	switch user.Type {
+	case users.UserTypeUnknonwn:
+		return body, subj, fmt.Errorf("user type unknown")
+	case users.UserTypeTrackLeader:
+		if user.HaveTeam {
+			subj = fmt.Sprintf("Регистрация команды в Краефест - трек \"%s\"", user.Track)
+			body, err = m.ParseTemplate(tmpltParticipantWithTeam, info)
+			if err != nil {
+				return body, subj, err
+			}
+			m.logger.Debugw("user template", "user", user.Email, "template", tmpltParticipantWithTeam)
+		}
+	case users.UserTypeMentor:
+		if user.HaveTeam {
+			body, err = m.ParseTemplate(tmpltMentorWithTeam, info)
+			if err != nil {
+				return body, subj, err
+			}
+			subj = fmt.Sprintf("Регистрация наставника с командой в Краефест  - трек \"%s\"", user.Track)
+			m.logger.Debugw("user template", "user", user.Email, "template", tmpltMentorWithoutTeam)
+		}
+		if !user.HaveTeam {
+			body, err = m.ParseTemplate(tmpltMentorWithoutTeam, info)
+			if err != nil {
+				return body, subj, err
+			}
+			subj = fmt.Sprintf("Регистрация наставника в Краефест  - трек \"%s\"", user.Track)
+			m.logger.Debugw("user template", "user", user.Email, "template", tmpltMentorWithoutTeam)
+		}
+	case users.UserTypeParticipant:
+		if user.HaveTeam {
+			subj = fmt.Sprintf("Регистрация команды в Краефест - трек \"%s\"", user.Track)
+			body, err = m.ParseTemplate(tmpltParticipantWithTeam, info)
+			if err != nil {
+				return body, subj, err
+			}
+			m.logger.Debugw("user template", "user", user.Email, "template", tmpltParticipantWithTeam)
+		}
+		if !user.HaveTeam {
+			subj = fmt.Sprintf("Регистрация участника в Краефест - трек \"%s\"", user.Track)
+			body, err = m.ParseTemplate(tmpltParticipantWithoutTeam, info)
+			if err != nil {
+				return body, subj, err
+			}
+			m.logger.Debugw("user template", "user", user.Email, "template", tmpltParticipantWithoutTeam)
+		}
+	case users.UserTypeVolunteer:
+		if !user.HaveTeam {
+			subj = fmt.Sprintf("Регистрация волонтера в Краефест - трек \"%s\"", user.Track)
+			body, err = m.ParseTemplate(tmpltVolunteerWithoutTeam, info)
+			if err != nil {
+				return body, subj, err
+			}
+			m.logger.Debugw("user template", "user", user.Email, "template", tmpltVolunteerWithoutTeam)
+		}
+	default:
+		return body, subj, fmt.Errorf("can not determine user type for template")
+	}
+	return body, subj, err
 }
 
 func (m *mailer) ParseTemplate(templateFileName string, data interface{}) (body string, err error) {
