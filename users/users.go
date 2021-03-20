@@ -51,6 +51,16 @@ const (
 	FormTypeNoTeam
 )
 
+func (t FormType) Name() string {
+	switch t {
+	case FormTypeWithTeam:
+		return "Форма Команда"
+	case FormTypeNoTeam:
+		return "Форма Участник без команды"
+	}
+	return "Unknown"
+}
+
 type User struct {
 	Email       string
 	LeaderEmail string
@@ -58,6 +68,7 @@ type User struct {
 	Name        string
 	HaveTeam    bool
 	Type        UserType
+	Form        FormType
 }
 
 type Users = map[string]User
@@ -128,12 +139,14 @@ func (u *users) AddUsers(sheet *spreadsheet.Sheet, config *SheetConfig, formType
 				user.Email = leaderMail
 				user.HaveTeam = config.HaveTeam
 				user.Type = UserTypeTrackLeader
+				user.Form = formType
 				u.users[leaderMail] = user
 			}
 		}
 
 		user.Email = mail
 		user.HaveTeam = config.HaveTeam
+		user.Form = formType
 		u.users[mail] = user
 	}
 	return err

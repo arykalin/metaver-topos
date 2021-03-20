@@ -57,7 +57,8 @@ func (n notifier) Notify(chatMap chatmapper.ChatMap, users users.Users) error {
 			n.logger.Debugf("sending links to user %s from track: %s. track info: %+v\n", mail, user.Track, trackInfo)
 			err = n.mailer.SendGreeting(user, trackInfo)
 			if err != nil {
-				msg := fmt.Sprintf("sending mail error mail: %s track: %s type: %s err: %s\n", mail, user.Track, user.Type.Name(), err)
+				msg := fmt.Sprintf("sending mail error mail: %s track: %s type: %s sheet form: %s err: %s\n",
+					mail, user.Track, user.Type.Name(), user.Form.Name(), err)
 				n.logger.Error(msg)
 				terr := n.teleLog.SendMessage(msg)
 				if terr != nil {
@@ -65,8 +66,8 @@ func (n notifier) Notify(chatMap chatmapper.ChatMap, users users.Users) error {
 				}
 				continue
 			}
-			msg := fmt.Sprintf("sent mail to user mail: %s track: %s type: %s haveTeam: %t track info: %+v\n",
-				mail, user.Track, user.Type.Name(), user.HaveTeam, trackInfo)
+			msg := fmt.Sprintf("sent mail to user mail: %s track: %s type: %s haveTeam: %t track info: %+v sheet form: %s\n",
+				mail, user.Track, user.Type.Name(), user.HaveTeam, trackInfo, user.Form.Name())
 			terr := n.teleLog.SendMessage(msg)
 			if terr != nil {
 				n.logger.Errorw("sending telegram message error", "err", err)
