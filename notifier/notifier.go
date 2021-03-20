@@ -66,7 +66,7 @@ func (n notifier) Notify(chatMap chatmapper.ChatMap, users users.Users) error {
 				}
 				continue
 			}
-			msg := fmt.Sprintf("sent mail to user mail: %s\n track: %s\n type: %s\n haveTeam: %t\n track info: %+v\n sheet form: %s\n",
+			msg := fmt.Sprintf("sent mail to user mail: %s\n track: %s\n type: %s\n haveTeam: %t\n track info:\n %+v\n sheet form: %s\n",
 				mail, user.Track, user.Type.Name(), user.HaveTeam, trackInfo, user.Form.Name())
 			terr := n.teleLog.SendMessage(msg)
 			if terr != nil {
